@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pico W - Sliders</title>
+</head>
+<body>
+    <h1>Servos</h1>
+
+    <div id="sliders">
+    </div>
+
+    <script>
+    for (let i = 1; i <= 12; i++) {
+        let div = document.createElement("div");
+        div.innerHTML = `
+            <label for="slider${i}">Slider ${i}:</label>
+            <input type="range" min="0" max="100" value="50"
+                   id="slider${i}"
+                   oninput="document.getElementById('val${i}').innerText=this.value"
+                   onchange="sendValue(${i}, this.value)">
+            <span id="val${i}">50</span>
+            <br><br>
+        `;
+        document.getElementById("sliders").appendChild(div);
+    }
+
+    function sendValue(id, value) {
+        fetch('/slider' + id + '?value=' + value)
+        .then(response => console.log("sent: slider" + id + " = " + value));
+    }
+    </script>
+</body>
+</html>
