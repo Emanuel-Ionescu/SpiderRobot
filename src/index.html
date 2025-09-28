@@ -44,7 +44,8 @@
             <input type="range" min="-90" max="90" value="0"
                    id="slider${i}"
                    oninput="document.getElementById('val${i}').innerText=this.value"
-                   onchange="sendValue(${i}, this.value)">
+                   onchange="sendValue(${i}, this.value)"
+                   style="width: 96%; margin: 0 2%;">
             <span id="val${i}">0</span>
             <br><br>
         `;

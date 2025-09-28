@@ -23,9 +23,9 @@ def main():
     if RUNNING_ON == "PICO":
         import network
 
-        ssid     = PARAMETERS["network"]["password"]
+        ssid     = PARAMETERS["network"]["SSID"]
         password = PARAMETERS["network"]["password"]
-
+        
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         wlan.connect(ssid, password)
@@ -52,6 +52,12 @@ def main():
     s.listen(1)
     print('listening on', addr)
 
+    # Servo
+    if RUNNING_ON == "PICO":
+        import servo
+        from machine import PWM
+        SERVOS = [servo.Servo(PARAMETERS["servo"][i], PWM(i)) for i in range(12)]
+
     while True:
         try:
             cl, addr = s.accept()
@@ -66,16 +72,17 @@ def main():
                     pos = request.find("value=")
                     if pos != -1:
                         val = request[pos+6:pos+9].split(" ")[0]
-                        stateis = (i - 1, val)
+                        stateis = (i - 1, int(val))
 
             print(stateis)
             if stateis[0] == -1:
                 if stateis[1] == 0:
                     #reset program
-                        return 0
+                    return 0
             else:
                 if RUNNING_ON == "PICO":
-                    pass
+                    print("servo=", stateis[0], "deg=", stateis[1])
+                    SERVOS[stateis[0]].set_degree(stateis[1])
 
 
             response = load_html()
