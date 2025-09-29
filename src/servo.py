@@ -2,10 +2,11 @@ from machine import PWM
 
 class Servo:
     def __init__(self, configuration : dict, PWM_PIN : PWM) -> None:
-        self.idx = configuration["id"]
-        self.max = configuration["max_percent"]
-        self.min = configuration["min_percent"]
-        self.pos = configuration["start_deg"]
+        self.idx    = configuration["id"]
+        self.max    = configuration["max_percent"]
+        self.min    = configuration["min_percent"]
+        self.pos    = configuration["start_deg"]
+        self.offset = configuration["offset"]
         self.pwm_pin = PWM_PIN
 
         self.pwm_pin.freq(50)
@@ -26,6 +27,7 @@ class Servo:
         self.pwm_pin.duty_u16(self.__get_duty_from_percent(pos_percent))
         
     def set_degree(self, deg : int) -> None:
+        deg -= self.offset
         self.pwm_pin.duty_u16(self.__get_duty_from_degree(deg))
         self.pos = deg    
 
