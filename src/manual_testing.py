@@ -19,6 +19,12 @@ def load_html():
 
 def main():
     
+    # Servo
+    if RUNNING_ON == "PICO":
+        import servo
+        from machine import PWM
+        SERVOS = [servo.Servo(PARAMETERS["servo"][i], PWM(i)) for i in range(12)]
+    
     # WiFi
     if RUNNING_ON == "PICO":
         import network
@@ -51,12 +57,6 @@ def main():
     s.bind(addr)
     s.listen(1)
     print('listening on', addr)
-
-    # Servo
-    if RUNNING_ON == "PICO":
-        import servo
-        from machine import PWM
-        SERVOS = [servo.Servo(PARAMETERS["servo"][i], PWM(i)) for i in range(12)]
 
     while True:
         try:

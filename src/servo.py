@@ -7,6 +7,7 @@ class Servo:
         self.min    = configuration["min_percent"]
         self.pos    = configuration["start_deg"]
         self.offset = configuration["offset"]
+        self.orient = configuration["orientation"]
         self.pwm_pin = PWM_PIN
 
         self.pwm_pin.freq(50)
@@ -28,6 +29,7 @@ class Servo:
         
     def set_degree(self, deg : int) -> None:
         deg -= self.offset
+        deg *= self.orient
         self.pwm_pin.duty_u16(self.__get_duty_from_degree(deg))
         self.pos = deg    
 

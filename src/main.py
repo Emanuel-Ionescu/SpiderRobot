@@ -69,13 +69,14 @@ while True:
         cl, addr = s.accept()
         print('client connected from', addr)
         request = cl.recv(2048).decode()
-        print(request)
         
         try:
             move = ujson.loads(request)
+            print(move)
             for leg in move.keys():
-                for joint in move[leg].keys():
-                    servos[leg][joint].set_degree(move[leg][joint])
+                if leg != "step_time":
+                    for joint in move[leg].keys():
+                        servos[leg][joint].set_degree(move[leg][joint])
         except Exception as e:
             print(e)
             
