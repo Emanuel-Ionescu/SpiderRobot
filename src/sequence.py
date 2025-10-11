@@ -1,6 +1,10 @@
 from typing import Any
 import json
 
+#
+# Objects definitions
+#
+
 class StepBase:
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         ...
@@ -19,6 +23,9 @@ class Move(StepBase):
     def __bytes__(self) -> bytes:
         return json.dumps(self.description).encode()
     
+    def __str__(self) -> str:
+        return json.dumps(self.description)
+
 class FullMove(StepBase):
     def __init__(self, move_description : list, step_time : float = 1) -> None:
         self.description = {}
@@ -33,6 +40,9 @@ class FullMove(StepBase):
              
     def __bytes__(self) -> bytes:
         return json.dumps(self.description).encode()
+    
+    def __str__(self) -> str:
+        return json.dumps(self.description)
 
 class Sequence:
     def __init__(self, delay_between_steps : float = 0) -> None:
@@ -57,29 +67,74 @@ class Sequence:
         self.internal_index = (self.internal_index + 1) % self.length 
         return res
 
-StandUPSequence = Sequence()
-StandUPSequence.addStep(Delay(1))
-StandUPSequence.addStep(FullMove([0, 45, -135] * 4))
-StandUPSequence.addStep(Delay(1))
-StandUPSequence.addStep(FullMove([0,  0,  -90] * 4))
+#==================================================================
+#
+# "Constants" moves and sequences
+#
+#==================================================================
 
-TestSequence = Sequence(1)
-for leg in ["L1", "L2", "L3", "L4"]:
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"1" : 40}}))
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"2" : 40}}))
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"3" : 40}}))
+from leg_positions import *
 
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"1" : 0}}))
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"2" : 0}}))
-    TestSequence.addStep(Move({"step_time" : 1, leg : {"3" : 0}}))
+#==================================================================
+#
+# PushUPs 
+#
+#==================================================================
 
-WalkForwardSequence = Sequence(0.2)
-for leg in ["L1", "L2", "L3", "L4"]:
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"2" : -30}}))
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"1" : 60}}))
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"3" : 40}}))
+PushupSequence = Sequence(1)
+PushupSequence.addStep(FullMove(STAND_POSITION))
+PushupSequence.addStep(FullMove(LIFTED_LEGS_POSITION))
+PushupSequence.addStep(FullMove(STAND_POSITION))
+PushupSequence.addStep(FullMove(LIFTED_LEGS_POSITION))
 
-for leg in ["L1", "L2", "L3", "L4"]:
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"2" : 0}}))
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"3" : -60}}))
-    WalkForwardSequence.addStep(Move({"step_time" : 0.2, leg : {"1" : 0}}))
+#==================================================================
+#
+# Walking Forward
+#
+#==================================================================
+WalkForwardSequence = Sequence(1)
+WalkForwardSequence.addStep(FullMove(STAND_POSITION))
+
+# first physical step
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND, LEG2_STAND, LEG3_LIFTED_FORWARD, LEG4_STAND)
+    ))
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+    ))
+
+# second physical step
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_LIFTED_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+    ))
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+    ))
+
+# third physical step
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND_FORWARD, LEG2_LIFTED_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
+    ))
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
+    ))
+
+# third physical step
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_LIFTED_FORWARD)
+    ))
+WalkForwardSequence.addStep(
+    FullMove(
+        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND_FORWARD)
+    ))
+
+# return to standing position
+WalkForwardSequence.addStep(FullMove(STAND_POSITION))
+

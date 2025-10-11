@@ -23,6 +23,7 @@ for leg in ["L1", "L2", "L3", "L4"]:
         servos[leg][joint] = Servo(parameters["servo"][idx], PWM(idx))
         idx += 1     
 
+led.value(1)
 
 #
 # WiFi
@@ -41,15 +42,20 @@ while max_wait > 0:
     if wlan.status() < 0 or wlan.status() >= 3:
         break
     max_wait -= 1
+    led.toggle()
     print('waiting for connection...')
     time.sleep(1)
 
 if wlan.status() != 3:
+    for i in range(10000):
+        led.toggle()
+        time.sleep(0.3)
     raise RuntimeError('network connection failed')
 else:
     print('connected')
     status = wlan.ifconfig()
     print('ip = ' + status[0])
+    led.value(1)
     
 #
 # Server socket
@@ -72,7 +78,6 @@ while True:
         
         try:
             move = ujson.loads(request)
-            print(move)
             for leg in move.keys():
                 if leg != "step_time":
                     for joint in move[leg].keys():
