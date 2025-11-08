@@ -1,14 +1,13 @@
 from machine import PWM
 
 class Servo:
-    def __init__(self, configuration : dict, PWM_PIN : PWM) -> None:
-        self.idx    = configuration["id"]
+    def __init__(self, configuration : dict) -> None:
         self.max    = configuration["max_percent"]
         self.min    = configuration["min_percent"]
         self.pos    = configuration["start_deg"]
         self.offset = configuration["offset"]
         self.orient = configuration["orientation"]
-        self.pwm_pin = PWM_PIN
+        self.pwm_pin = PWM(configuration["pin"])
 
         self.pwm_pin.freq(50)
         

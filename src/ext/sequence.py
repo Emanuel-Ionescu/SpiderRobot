@@ -92,49 +92,64 @@ PushupSequence.addStep(FullMove(LIFTED_LEGS_POSITION))
 # Walking Forward
 #
 #==================================================================
-WalkForwardSequence = Sequence(1)
+WalkForwardSequence = Sequence(0.2)
 WalkForwardSequence.addStep(FullMove(STAND_POSITION))
 
-# first physical step
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND, LEG2_STAND, LEG3_LIFTED_FORWARD, LEG4_STAND)
-    ))
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
-    ))
+WalkForwardSequence.addStep(FullMove([0, -70, 170, 0, -30, 130, 0, -30, 130, 0, -60, 130]))
+WalkForwardSequence.addStep(FullMove([0, -30, 130, 0, -30, 130, 0, -30, 130, 50, -30, 120]))
 
-# second physical step
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_LIFTED_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
-    ))
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
-    ))
+WalkForwardSequence.addStep(FullMove([-45, -30, 130, -45, -30, 130, 0, -70, 130, -50, -30, 120]))
+WalkForwardSequence.addStep(FullMove([-45, -30, 130, -45, -30, 130, 50, -30, 130, -50, -30, 120]))
 
-# third physical step
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND_FORWARD, LEG2_LIFTED_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
-    ))
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
-    ))
+WalkForwardSequence.addStep(FullMove([-45, -30, 130, -45, -30, 130, 50, -30, 130, 50, -70, 120]))
+WalkForwardSequence.addStep(FullMove([-45, -30, 130, -45, -30, 130, 50, -30, 130, 50, -30, 120]))
 
-# third physical step
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_LIFTED_FORWARD)
-    ))
-WalkForwardSequence.addStep(
-    FullMove(
-        POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND_FORWARD)
-    ))
 
-# return to standing position
-WalkForwardSequence.addStep(FullMove(STAND_POSITION))
+
+#WalkForwardSequence.addStep(FullMove([0, -30, 130, 0, -30, 130, 0, -30, 130, 45, -30, 130]))
+
+
+
+# # first physical step
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND, LEG2_STAND, LEG3_LIFTED_FORWARD, LEG4_STAND)
+#     ))
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+#     ))
+
+# # second physical step
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_LIFTED_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+#     ))
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND_FORWARD, LEG2_STAND, LEG3_STAND_FORWARD, LEG4_STAND)
+#     ))
+
+# # third physical step
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND_FORWARD, LEG2_LIFTED_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
+#     ))
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND)
+#     ))
+
+# # third physical step
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_LIFTED_FORWARD)
+#     ))
+# WalkForwardSequence.addStep(
+#     FullMove(
+#         POSITION(LEG1_STAND_FORWARD, LEG2_STAND_FORWARD, LEG3_STAND_FORWARD, LEG4_STAND_FORWARD)
+#     ))
+
+# # return to standing position
+# WalkForwardSequence.addStep(FullMove(STAND_POSITION))
 

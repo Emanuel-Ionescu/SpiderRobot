@@ -3,10 +3,10 @@ def POSITION(l1 : list[int], l2 : list[int], l3 : list[int], l4 : list[int]) -> 
     return [sum(x) for x in zip(l1, l2, l3, l4)]
 
 # standing
-LEG1_STAND = [0, 0, 0] * 0 + [0, -40, 20] + [0, 0, 0] * 3
-LEG2_STAND = [0, 0, 0] * 1 + [0, -40, 15] + [0, 0, 0] * 2
-LEG3_STAND = [0, 0, 0] * 2 + [0, -40, 15] + [0, 0, 0] * 1
-LEG4_STAND = [0, 0, 0] * 3 + [0, -40, 10] + [0, 0, 0] * 0
+LEG1_STAND = [0, 0, 0] * 0 + [0, -30, 130] + [0, 0, 0] * 3
+LEG2_STAND = [0, 0, 0] * 1 + [0, -30, 130] + [0, 0, 0] * 2
+LEG3_STAND = [0, 0, 0] * 2 + [0, -30, 130] + [0, 0, 0] * 1
+LEG4_STAND = [0, 0, 0] * 3 + [0, -30, 130] + [0, 0, 0] * 0
 STAND_POSITION = POSITION(
     LEG1_STAND, 
     LEG2_STAND, 

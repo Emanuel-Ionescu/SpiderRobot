@@ -2,7 +2,7 @@ import socket
 import time
 from sequence import *
 
-PICO_IP = "192.168.1.7"
+PICO_IP = "192.168.1.229"
 
 
 def send_recv(step : Move | FullMove):
@@ -27,6 +27,7 @@ def main():
         
         send_recv(step)
 
+    time.sleep(100)
     send_recv(FullMove(STAND_POSITION))
 
 
