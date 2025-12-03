@@ -1,0 +1,24 @@
+{
+    "servo": [
+        {"pin" :  0, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" : 0, "orientation" :  1},
+        {"pin" :  1, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" :-8, "orientation" :  1},
+        {"pin" :  2, "max_percent" : 3, "min_percent" : 12, "start_deg" :-60, "offset" :68, "orientation" : -1},
+        
+        {"pin" :  3, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" : 0, "orientation" : -1},
+        {"pin" :  4, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" :-8, "orientation" : -1},
+        {"pin" :  5, "max_percent" : 3, "min_percent" : 12, "start_deg" :-60, "offset" :60, "orientation" :  1},
+        
+        {"pin" :  6, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" : 0, "orientation" :  1},
+        {"pin" :  7, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" :-4, "orientation" : -1},
+        {"pin" :  8, "max_percent" : 3, "min_percent" : 12, "start_deg" :-60, "offset" :65, "orientation" :  1},
+        
+        {"pin" :  9, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" : 4, "orientation" : -1},
+        {"pin" : 10, "max_percent" : 3, "min_percent" : 12, "start_deg" :  0, "offset" : 0, "orientation" :  1},
+        {"pin" : 11, "max_percent" : 3, "min_percent" : 12, "start_deg" :-60, "offset" :69, "orientation" : -1}
+    ],
+
+    "network" : {
+        "SSID" : "TP-Link_4FEC",
+        "password" : "HelloWorld"
+    }
+}

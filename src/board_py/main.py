@@ -85,18 +85,18 @@ print('listening on', addr)
 # Infinite loop
 #
 
-del parameters
-del ujson
 
 while True:
     time.sleep(0.05)
     try:
-        cl, addr = s.accept()
+        cl, addr = server_sock.accept()
         print('client connected from', addr)
         request = cl.recv(2048).decode()
-        
-        for i, val in enumerate(request.split(',')):
-            servos[i].set_degree(int(val))
+        try:
+            for index, angle in enumerate(request.split(":")):
+                servos[index].set_degree(int(angle))
+        except Exception as e:
+            print(e)
             
         acc  = mpu6500.acceleration
         gyro = mpu6500.gyro
