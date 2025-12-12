@@ -2,6 +2,8 @@ from copy import deepcopy
 import math
 import numpy as np
 import socket
+import serial
+import time
 
 OFFSET = None
 
@@ -76,3 +78,14 @@ class Client:
         client_socket.send(data.encode('utf-8'))
         client_socket.close()
 
+class SerialClient:
+
+    def __init__(self, port : str, baud_rate : int = 115200):
+        self.port = port
+        self.baud_rate = baud_rate
+        self.ser = serial.Serial(self.port, self.baud_rate, timeout=1)
+        time.sleep(2)
+    
+    def __call__(self, data : str):
+        self.ser.write((data + '\n').encode('utf-8'))
+        return self.ser.readline().decode('utf-8').rstrip()

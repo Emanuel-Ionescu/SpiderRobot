@@ -39,47 +39,50 @@ green_led.value(1)
 #
 # WiFi
 #
-import network
-
-ssid     = parameters["network"]["SSID"]
-password = parameters["network"]["password"]
-
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-wlan.connect(ssid, password)
-
-max_wait = 10
-while max_wait > 0:
-    if wlan.status() < 0 or wlan.status() >= 3:
-        break
-    max_wait -= 1
-    green_led.toggle()
-    print('waiting for connection...')
-    time.sleep(1)
-
-if wlan.status() != 3:
-    red_led.value(1)
-    for i in range(10000):
-        green_led.toggle()
-        red_led.toggle()
-        time.sleep(0.3)
-    raise RuntimeError('network connection failed')
-else:
-    red_led.value(0)
-    blue_led.value(1)
-    print('connected')
-    status = wlan.ifconfig()
-    print('ip = ' + status[0])
-    green_led.value(1)
-    
+#import network
+#
+#ssid     = parameters["network"]["SSID"]
+#password = parameters["network"]["password"]
+#
+#wlan = network.WLAN(network.STA_IF)
+#wlan.active(True)
+#wlan.connect(ssid, password)
+#
+#max_wait = 10
+#while max_wait > 0:
+#    if wlan.status() < 0 or wlan.status() >= 3:
+#        break
+#    max_wait -= 1
+#    green_led.toggle()
+#    print('waiting for connection...')
+#    time.sleep(1)
+#
+#if wlan.status() != 3:
+#    red_led.value(1)
+#    for i in range(10000):
+#        green_led.toggle()
+#        red_led.toggle()
+#        time.sleep(0.3)
+#    raise RuntimeError('network connection failed')
+#else:
+#    red_led.value(0)
+#    blue_led.value(1)
+#    print('connected')
+#    status = wlan.ifconfig()
+#    print('ip = ' + status[0])
+#    green_led.value(1)
+#    
 #
 # Server socket
 #
-addr = socket.getaddrinfo('0.0.0.0', 8080)[0][-1]
-server_sock = socket.socket()
-server_sock.bind(addr)
-server_sock.listen(1)
-print('listening on', addr)
+#addr = socket.getaddrinfo('0.0.0.0', 8080)[0][-1]
+#server_sock = socket.socket()
+#server_sock.bind(addr)
+#server_sock.listen(1)
+#print('listening on', addr)
+#
+import sys
+import select
 
 #
 # Infinite loop
@@ -89,15 +92,21 @@ print('listening on', addr)
 while True:
     time.sleep(0.05)
     try:
-        cl, addr = server_sock.accept()
-        print('client connected from', addr)
-        request = cl.recv(2048).decode()
-        try:
-            for index, angle in enumerate(request.split(":")):
-                servos[index].set_degree(int(angle))
-        except Exception as e:
-            print(e)
+#        cl, addr = server_sock.accept()
+#        print('client connected from', addr)
+#        request = cl.recv(2048).decode()
+        r, w, e = select.select([sys.stdin], [], [])
+    
+        if sys.stdin in r:
+            request = sys.stdin.readline().strip()
             
+            if request:
+            try:
+                for index, angle in enumerate(request.split(":")):
+                    servos[index].set_degree(int(angle))
+            except Exception as e:
+                print(e)
+                
         acc  = mpu6500.acceleration
         gyro = mpu6500.gyro
         
@@ -105,10 +114,12 @@ while True:
             "accelerometer" : {list(acc)},
             "gyroscope" : {list(gyro)} 
         """
-        cl.send(status.encode())
-        cl.close()
+        print(status)
+#        cl.send(status.encode())
+#        cl.close()
     except OSError as e:
-        cl.close()
-        print('connection closed')
+#        cl.close()
+#        print('connection closed')
+        print(e)
         blue_led.value(0)
         red_led.value(1)

@@ -7,14 +7,14 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-p', '--plot', action='store_true', help='Plots the spider')
 parser.add_argument('-s', '--simulate', action='store_true', help='Sends the data to the simulator')
 parser.add_argument('-r', '--real', action='store_true', help='Sends the data to the real robot')
-parser.add_argument('--host', type=str, default="localhost", help='Robot IP address')
+parser.add_argument('--serial', type=str, default="/dev/ttyS7", help='Pico Serial Port')
 args = parser.parse_args()
 
 import numpy as np
 from copy import deepcopy
 from math import cos, sin, radians, pi as PI
 import time
-from utils import Offsetter, lean, Client, move_leg
+from utils import Offsetter, lean, Client, SerialClient, move_leg
 from spider_leg import SpiderLeg
 if args.plot:
     from leg_plotter import plot_base, plot_leg, spider_show
@@ -37,7 +37,7 @@ LEGS = [
 BASE = (160, 83.7) 
 OFFSET = Offsetter(BASE)
 SIMULATOR_SENDER = Client("localhost", 5005)
-REAL_SENDER = Client(args.host, 8080)
+REAL_SENDER = SerialClient(args.serial)
 
 '''
 End of global variables
