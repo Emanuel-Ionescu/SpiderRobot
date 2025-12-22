@@ -2,11 +2,13 @@ from machine import PWM
 
 class Servo:
     def __init__(self, configuration : dict) -> None:
-        self.max    = configuration["max_percent"]
-        self.min    = configuration["min_percent"]
-        self.pos    = configuration["start_deg"]
-        self.offset = configuration["offset"]
-        self.orient = configuration["orientation"]
+        self.max     = configuration["max_percent"]
+        self.min     = configuration["min_percent"]
+        self.max_ang = configuration["max_angle"]
+        self.min_ang = configuration["min_angle"]
+        self.pos     = configuration["start_deg"]
+        self.offset  = configuration["offset"]
+        self.orient  = configuration["orientation"]
         self.pwm_pin = PWM(configuration["pin"])
 
         self.pwm_pin.freq(50)

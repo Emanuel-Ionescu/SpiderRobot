@@ -1,24 +1,19 @@
-import argparse
-parser = argparse.ArgumentParser(
-                    prog='SpiderBrain',
-                    description='Computes the spider moves',
-                    epilog='')
 
-parser.add_argument('-p', '--plot', action='store_true', help='Plots the spider')
-parser.add_argument('-s', '--simulate', action='store_true', help='Sends the data to the simulator')
-parser.add_argument('-r', '--real', action='store_true', help='Sends the data to the real robot')
-parser.add_argument('--serial', type=str, default="/dev/ttyS7", help='Pico Serial Port')
-args = parser.parse_args()
-
+import time
 import numpy as np
+import os
+import sequences
+import socket
+import cv2
+import importlib
+
 from copy import deepcopy
 from math import cos, sin, radians, pi as PI
-import time
-from utils import Offsetter, lean, Client, SerialClient, move_leg
-from spider_leg import SpiderLeg
-if args.plot:
-    from leg_plotter import plot_base, plot_leg, spider_show
-
+from utils import Offsetter, lean, Client, SerialClient, move_leg, get_htop
+from inverse_kinematics import SpiderLeg
+from inverse_kinematics import plot_base, plot_leg, spider_show
+from web_gui import run_server, set_frame_queue, app
+from multiprocessing import Queue, Process
 '''
 End of imports
 '''
@@ -28,51 +23,50 @@ Global variables
 '''
 
 LEGS = [
-        SpiderLeg("Leg1", COXA=60.5, FEMUR=96.3, TIBIA=117.5),
-        SpiderLeg("Leg2", COXA=60.5, FEMUR=96.3, TIBIA=117.5),
-        SpiderLeg("Leg3", COXA=60.5, FEMUR=96.3, TIBIA=117.5),
-        SpiderLeg("Leg4", COXA=60.5, FEMUR=96.3, TIBIA=117.5)
+        SpiderLeg("Leg1", COXA=60.5, FEMUR=96.3, TIBIA=113.5),
+        SpiderLeg("Leg2", COXA=60.5, FEMUR=96.3, TIBIA=113.5),
+        SpiderLeg("Leg3", COXA=60.5, FEMUR=96.3, TIBIA=113.5),
+        SpiderLeg("Leg4", COXA=60.5, FEMUR=96.3, TIBIA=113.5)
 ]
 
 BASE = (160, 83.7) 
 OFFSET = Offsetter(BASE)
-SIMULATOR_SENDER = Client("localhost", 5005)
-REAL_SENDER = SerialClient(args.serial)
+try:
+    REAL_SENDER = SerialClient("/dev/ttyACM1")
+    print("PICO found!")
+except Exception as e:
+    print("No PICO found: ", e)
+    REAL_SENDER = None
+# SIMULATOR_SENDER = Client("localhost", 5005)
 
 '''
 End of global variables
 
 Helper functions
 '''
-
-def execute_position(position : list[list[float]]):
+def execute_position(position : list[list[float]], debug : bool = True):
     global LEGS, BASE, OFFSET, SIMULATOR_SENDER, REAL_SENDER
 
-    colors = ["blue", "red", "green", "orange"]
-    if args.plot:
-        plot_base(*BASE, "purple") # type: ignore
-
-    to_send = ""
+    to_send = "set_angles "
     aux = OFFSET.remove_offset(position)
     for i in range(4):
         angles, joint_positions = LEGS[i].compute_angles(aux[i])
         joint_position = OFFSET.apply_offset_JP(joint_positions, i)
-        if args.plot:
-            plot_leg(joint_positions, colors[i], i+1) # type: ignore
-
         to_send += f"{int(angles[0])}:{int(angles[1])}:{int(angles[2])}:"
 
-    print("Angles:", to_send[:-1])
+        plot_leg(joint_positions, i) 
 
-    if args.simulate:
-        SIMULATOR_SENDER(to_send[:-1])
-    if args.real:
-        REAL_SENDER(to_send[:-1])
+    if debug:
+        print("SENT:", to_send[:-1])
 
-    if args.plot:
-        a = spider_show(0.01) # type: ignore
-        if a:
-            exit()
+    if REAL_SENDER:
+        response = REAL_SENDER(to_send[:-1])
+        if debug:
+            print("PICO:", response)
+
+    plot_base(*BASE)
+    frame = spider_show(0.01, draw=False)
+    return frame
 
 '''
 End of helper functions
@@ -80,86 +74,52 @@ End of helper functions
 MAIN Function
 '''
 
+iter = 0
 def main():
     global OFFSET
 
-    start_position = OFFSET.apply_offset([
-        [ 90,  90, 0],
-        [ 90, -90, 0],
-        [-90,  90, 0],
-        [-90, -90, 0] 
-    ])
+    frame_queue = Queue(maxsize=2)
+    command_queue = Queue(maxsize=2)
+    server_process = Process(target=run_server, args=(frame_queue, command_queue))
+    server_process.start()
 
-    normal_position = OFFSET.apply_offset([
-        [ 90,  90, -95],
-        [ 90, -90, -95],
-        [-90,  90, -95],
-        [-90, -90, -95] 
-    ])
+    htop_frame_queue = Queue(maxsize=1)
+    htop_process = Process(target=run_htop, args=(htop_frame_queue,))
+    htop_process.start()
 
-    current_pos = deepcopy(normal_position)
+    animation = None
+    while True:
+        if not command_queue.empty():
+            command = command_queue.get()
+            print("Command received: ", command)
+            if command == "pause":
+                animation = None
+                importlib.reload(sequences)
+            elif command == "stand_up":
+                animation = sequences.stand_up
+            elif command == "sit_down":
+                animation = sequences.sit_down
+            elif command == "walk":
+                animation = sequences.walk
 
-    standup_animation = [
-        lean(normal_position, 0, 0, -95),
-        deepcopy(normal_position)
-    ]
+            iter = 0
 
+        plot_frame = np.zeros((480, 1280, 3), dtype=np.uint8)
+        if animation is not None:
+            iter += 1
+            plot_frame = execute_position(animation[iter], debug=True)
+            if iter == len(animation) - 1:
+                animation = None
+                iter = 0
+        else:
+            iter = 0
 
+        composed_frame = np.concatenate((plot_frame, get_htop()), axis=0)
 
-    walking_animation = [start_position]
-    # walking_animation.append(lean(walking_animation[-1], 40, 40))
-    # walking_animation.append(move_leg(walking_animation[-1], 3, 80, 0, 40))
-    # walking_animation.append(move_leg(walking_animation[-1], 3, 50, 0, -40))
-    # for i in range(80):
-    #     walking_animation.append(lean(walking_animation[-1], 0, -1))
-
-    # for i in range(int((PI * 2) * 2)):
-    #     walking_animation.append(lean(START_POSITION, cos(i/2)*50, 0))
-
-    # first wake up
-    # for step in standup_animation:
-    #     time.sleep(0.1)
-    #     if input() != "":
-    #         exit()
-
-    #     if args.plot:
-    #         plot_base(*base, "purple") # type: ignore
-
-    #     to_send = ""
-    #     aux = offset.remove_offset(step)
-    #     for i in range(4):
-    #         angles, joint_positions = legs[i].compute_angles(aux[i])
-    #         joint_position = offset.apply_offset_JP(joint_positions, i)
-    #         if args.plot:
-    #             plot_leg(joint_positions, colors[i], i+1) # type: ignore
-
-    #         to_send += f"{int(angles[0])}:{int(angles[1])}:{int(angles[2])}:"
-
-    #     if args.simulate:
-    #         simulator_sender(to_send[:-1])
-    #     if args.real:
-    #         print("Sent:", to_send[:-1])
-    #         real_sender(to_send[:-1])
-
-    #     if args.plot:
-    #         a = spider_show(0.01) # type: ignore
-    #         if a:
-    #             exit()
-
-    REAL_SENDER(
-        "20:0:0:" + 
-        "-20:0:0:" + 
-        "20:0:0:" + 
-        "-20:0:0"
-    )
-
-    # iter = 0
-    # while True:
-    #     time.sleep(1.5)
-    #     iter += 1
-        
-    #     execute_position(walking_animation[iter % len(walking_animation)])
-
+        frame_queue.put(composed_frame)
+        time.sleep(0.01)
 
 if __name__ == "__main__":
+    print("Welcome to the Spider Robot!")
+    print("Starting the main loop...")
     main()

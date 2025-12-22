@@ -4,6 +4,30 @@ import numpy as np
 import socket
 import serial
 import time
+import cv2 
+import psutil
+import os
+
+blank = np.zeros((30, 1280, 3), dtype=np.uint8)
+
+def get_htop():
+    # get each core usage
+    cpu_usage = psutil.cpu_percent(interval=1, percpu=True)
+    
+    # get memory usage
+    memory_usage = psutil.virtual_memory().percent
+    
+    # get temperature
+    temp = os.popen("vcgencmd measure_temp").read().strip()
+    temp = temp.split("=")[1]
+
+    frame = blank.copy()
+    
+    cv2.putText(frame, "CPU: {}% {}% {}% {}%".format(*cpu_usage), (5, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.putText(frame, "Memory: {}%".format(memory_usage), (600, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.putText(frame, "Temperature: " + str(temp), (1100, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+    return frame
 
 OFFSET = None
 
@@ -84,8 +108,13 @@ class SerialClient:
         self.port = port
         self.baud_rate = baud_rate
         self.ser = serial.Serial(self.port, self.baud_rate, timeout=1)
+        self.ser.flush()
         time.sleep(2)
     
     def __call__(self, data : str):
         self.ser.write((data + '\n').encode('utf-8'))
-        return self.ser.readline().decode('utf-8').rstrip()
+        line = self.ser.readline().decode('utf-8', errors='replace').rstrip()
+        if line:
+            return line
+        else:
+            return "TIMEOUT"

@@ -1,13 +1,17 @@
-from machine import Pin, PWM, I2C
-from mpu6500 import MPU6500, SF_G, SF_DEG_S
 import ujson
 import time
 import socket
-from servo import Servo
+import sys
+import select
 
+from servo import Servo
+from machine import Pin, PWM, I2C, reset as machine_reset
+from mpu6500 import MPU6500, SF_G, SF_DEG_S
+
+print("Pico starting!")
 with open("./config.json", 'r') as f:
     parameters = ujson.load(f)
-
+print("Config loaded!")
 #
 # Hardware declaration
 #
@@ -17,7 +21,7 @@ class DummyMPU6500:
 
 # I2C
 i2c1 = I2C(1, sda=Pin(18), scl=Pin(19))
-print("Devices:", i2c1.scan())
+print("I2C Devices:", i2c1.scan())
 if len(i2c1.scan()) == 0:
     mpu6500 = DummyMPU6500()
 else:
@@ -34,92 +38,43 @@ red_led.value(1)
 # Servos
 servos = [Servo(parameters["servo"][i]) for i in range(12)]
 
-green_led.value(1)
-
-#
-# WiFi
-#
-#import network
-#
-#ssid     = parameters["network"]["SSID"]
-#password = parameters["network"]["password"]
-#
-#wlan = network.WLAN(network.STA_IF)
-#wlan.active(True)
-#wlan.connect(ssid, password)
-#
-#max_wait = 10
-#while max_wait > 0:
-#    if wlan.status() < 0 or wlan.status() >= 3:
-#        break
-#    max_wait -= 1
-#    green_led.toggle()
-#    print('waiting for connection...')
-#    time.sleep(1)
-#
-#if wlan.status() != 3:
-#    red_led.value(1)
-#    for i in range(10000):
-#        green_led.toggle()
-#        red_led.toggle()
-#        time.sleep(0.3)
-#    raise RuntimeError('network connection failed')
-#else:
-#    red_led.value(0)
-#    blue_led.value(1)
-#    print('connected')
-#    status = wlan.ifconfig()
-#    print('ip = ' + status[0])
-#    green_led.value(1)
-#    
-#
-# Server socket
-#
-#addr = socket.getaddrinfo('0.0.0.0', 8080)[0][-1]
-#server_sock = socket.socket()
-#server_sock.bind(addr)
-#server_sock.listen(1)
-#print('listening on', addr)
-#
-import sys
-import select
-
 #
 # Infinite loop
 #
 
-
+green_led.value(1)
 while True:
     time.sleep(0.05)
     try:
-#        cl, addr = server_sock.accept()
-#        print('client connected from', addr)
-#        request = cl.recv(2048).decode()
-        r, w, e = select.select([sys.stdin], [], [])
-    
-        if sys.stdin in r:
-            request = sys.stdin.readline().strip()
-            
-            if request:
-            try:
-                for index, angle in enumerate(request.split(":")):
+        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            blue_led.value(1)
+            red_led.value(0)
+            data = sys.stdin.readline().strip()
+            command = data.split(" ")[0]
+
+            if command == "set_angles":
+                angles = data.split(" ")[1]
+                for index, angle in enumerate(angles.split(":")):
                     servos[index].set_degree(int(angle))
-            except Exception as e:
-                print(e)
+                        
+                acc  = mpu6500.acceleration
+                gyro = mpu6500.gyro
                 
-        acc  = mpu6500.acceleration
-        gyro = mpu6500.gyro
-        
-        status = f"""
-            "accelerometer" : {list(acc)},
-            "gyroscope" : {list(gyro)} 
-        """
-        print(status)
-#        cl.send(status.encode())
-#        cl.close()
-    except OSError as e:
-#        cl.close()
-#        print('connection closed')
-        print(e)
-        blue_led.value(0)
-        red_led.value(1)
+                status = {"angles" : data, "accelerometer" : list(acc), "gyroscope" : list(gyro)}
+                print(ujson.dumps(status))
+
+            if command == "reset":
+                for servo in servos:
+                    servo.set_degree(0)
+                print("Servos reset!\nResetting PICO...")
+                machine_reset()
+            if command == "help":
+                print("""
+Help:
+help                - shows this message
+set_angles <angles> - sets the angles of the servos (xx:xx: ...) for 12 motors
+reset               - reset the program
+
+""")
+    except Exception as e:
+            print(e)
