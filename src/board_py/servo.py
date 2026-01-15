@@ -23,6 +23,7 @@ class Servo:
     def __get_duty_from_degree(self, degree: int) -> int:
         degree = max(-90, min(degree, 90))
         percent = (degree + 90)/180 * (self.max - self.min) + self.min # scale the degree into operating interval
+        print(percent, "%")
         return self.__get_duty_from_percent(percent)
 
     def set_position(self, pos_percent : float) -> None:
