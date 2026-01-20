@@ -1,12 +1,14 @@
-import pandas as pandas
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
-raw_data = pandas.read_excel("servo_data.xlsx")
+raw_data = pd.read_excel("servo_data.xlsx")
 # Strip whitespace from column names
 raw_data.columns = raw_data.columns.str.strip()
 
 data = {}
+config_data = {"servos": []}
 
 servos_names = [f"Servo{i}" for i in range(12)]
 
@@ -25,10 +27,20 @@ for servo in servos_names:
     
     data[servo]["m"] = float(np.polyfit(np.array(data[servo]["duty"]), np.array(data[servo]["angle"]), 1)[0])
     data[servo]["b"] = float(np.polyfit(np.array(data[servo]["duty"]), np.array(data[servo]["angle"]), 1)[1])
+    config_data["servos"].append({
+        "m": data[servo]["m"],
+        "b": data[servo]["b"],
+        "min_duty": min(data[servo]["duty"]),
+        "max_duty": max(data[servo]["duty"]),
+        "min_angle": min(data[servo]["angle"]),
+        "max_angle": max(data[servo]["angle"])
+    })
 
+with open("config.json", "w") as f:
+    json.dump(config_data, f, indent=4)
 
 for servo in data.keys():
-    plt.figure()
+    # plt.figure()
     
     duty_array = np.array(data[servo]["duty"])
     angle_array = np.array(data[servo]["angle"])
@@ -45,11 +57,11 @@ for servo in data.keys():
             plt.text(duty_array[i], angle_array[i], f"{residuals[i]:.2f}", color="y")
         
     
-    plt.plot(data[servo]["duty"], data[servo]["angle"], label=servo, marker=".")
-    plt.plot(duty_array, fitted_values, label=servo+" fit")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    # plt.plot(data[servo]["duty"], data[servo]["angle"], label=servo, marker=".")
+    # plt.plot(duty_array, fitted_values, label=servo+" fit")
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.show()
 
     print(data[servo])
     print()
