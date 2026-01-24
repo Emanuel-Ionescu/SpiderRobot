@@ -8,7 +8,8 @@ raw_data = pd.read_excel("servo_data.xlsx")
 raw_data.columns = raw_data.columns.str.strip()
 
 data = {}
-config_data = {"servos": []}
+config_data = {"servo": []}
+pin_idx = 0
 
 servos_names = [f"Servo{i}" for i in range(12)]
 
@@ -33,8 +34,10 @@ for servo in servos_names:
         "min_duty": min(data[servo]["duty"]),
         "max_duty": max(data[servo]["duty"]),
         "min_angle": min(data[servo]["angle"]),
-        "max_angle": max(data[servo]["angle"])
+        "max_angle": max(data[servo]["angle"]),
+        "pin" : pin_idx
     })
+    pin_idx += 1
 
 with open("config.json", "w") as f:
     json.dump(config_data, f, indent=4)
