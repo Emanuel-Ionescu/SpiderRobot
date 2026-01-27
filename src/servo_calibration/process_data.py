@@ -28,7 +28,7 @@ for servo in servos_names:
     
     data[servo]["m"] = float(np.polyfit(np.array(data[servo]["duty"]), np.array(data[servo]["angle"]), 1)[0])
     data[servo]["b"] = float(np.polyfit(np.array(data[servo]["duty"]), np.array(data[servo]["angle"]), 1)[1])
-    config_data["servos"].append({
+    config_data["servo"].append({
         "m": data[servo]["m"],
         "b": data[servo]["b"],
         "min_duty": min(data[servo]["duty"]),
