@@ -2,7 +2,7 @@ from utils import Offsetter, lean, move_leg
 from math import cos, pi as PI
 from copy import deepcopy
 
-OFFSET = Offsetter((160, 83.7))
+OFFSET = Offsetter((160, 160))
 
 start_position = OFFSET.apply_offset([
         [ 90,  90, 0],
@@ -17,7 +17,6 @@ normal_position = OFFSET.apply_offset([
         [-90, -90, -95] 
     ])
 current_pos = deepcopy(normal_position)
-
 
 '''
 Stand up/down animation
@@ -53,58 +52,45 @@ sit_down = [
 '''
 Walking animation
 '''
-def create_walk_sequence(target_X):
+
+# Spider leg numbering
+# \         /
+#  3       1
+#   \     /
+#    +-o-+
+#    |   |
+#    +---+
+#   /     \
+#  4       2
+# /         \
+
+
+def create_walk_sequence(target_Y):
+
+    target_Y /= 2
+
     walk = [
         deepcopy(normal_position),    
     ]
     # lean forward
-    aux_target = target_X + 30
     
     # for loops for slower movement
     # for i in range(1, 6):
-    #     walk.append(lean(normal_position, i*aux_target/5, 0))
-    walk.append(lean(normal_position, aux_target, 0))
+    #     walk.append(lean(normal_position, 0, i*target_Y/5))
+    walk.append(lean(normal_position, 0, target_Y))
 
-    # move leg 3 forward
-    walk.append(move_leg(walk[-1], 3, target_X, 0, 90))
-    walk.append(move_leg(walk[-1], 3, target_X, 0, -90))
+    # move legs
+    for moved_leg, opposite_leg in zip([2, 4, 1, 3], [3, 1, 4, 2]):
+        walk.append(move_leg(walk[-1], leg_no=opposite_leg, x=0, y=0, z=60))
 
-    # move leg 2 forward
-    walk.append(move_leg(walk[-1], 2, target_X, 0, 90))
-    walk.append(move_leg(walk[-1], 2, target_X, 0, -90))
-    
-    # lean a bit back
-    # for i in range(1, 5):
-    #     walk.append(lean(walk[-1], -10, 0)) 
-    walk.append(lean(walk[-1], -40, 0))
+        walk.append(move_leg(walk[-1], leg_no=moved_leg, x=0, y=target_Y, z=50))
+        walk.append(move_leg(walk[-1], leg_no=moved_leg, x=0, y=target_Y, z=-50)) 
 
-    # move leg 1 forward
-    walk.append(move_leg(walk[-1], 1, target_X, 0, 90))
-    walk.append(move_leg(walk[-1], 1, target_X, 0, -90))
-    
-    # move leg 0 forward
-    walk.append(move_leg(walk[-1], 0, target_X, 0, 90))
-    walk.append(move_leg(walk[-1], 0, target_X, 0, -90))
+        walk.append(move_leg(walk[-1], leg_no=opposite_leg, x=0, y=0, z=-60))
 
-    # forward
-    aux_pos = walk[-1]
-    aux_target = target_X + 10
-    # for i in range(1, 6):
-    #     walk.append(lean(aux_pos, i*aux_target/5, 0))
-    walk.append(lean(aux_pos, aux_target, 0))
 
-    walk.append(walk[-1])
-    walk.append(walk[-1])
+    walk.append(lean(walk[-1], 0, target_Y))
 
     return walk
 
-walk = create_walk_sequence(20)
-
-# walk.append(move_leg(walk[-1], 3, 50, -45, 50))
-# walk.append(move_leg(walk[-1], 3, 50, 0, -50))
-# #walk.append(lean(walk[-1], 50, 0))
-
-# # walk.append(move_leg(walk[-1], 3, 100, 50, 50))
-# # walk.append(move_leg(walk[-1], 3, 100, 0, -50))
-
-# walk.append(deepcopy(normal_position))
+walk = create_walk_sequence(150)

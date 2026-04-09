@@ -1,4 +1,3 @@
-
 import time
 import numpy as np
 import os
@@ -9,7 +8,7 @@ import importlib
 
 from copy import deepcopy
 from math import cos, sin, radians, pi as PI
-from utils import Offsetter, lean, Client, SerialClient, move_leg, get_htop
+from utils import Offsetter, Client, SerialClient, move_leg, get_htop, timer
 from inverse_kinematics import SpiderLeg
 from inverse_kinematics import plot_base, plot_leg, spider_show
 from web_gui import run_server, set_frame_queue, app
@@ -29,14 +28,20 @@ LEGS = [
         SpiderLeg("Leg4", COXA=60.5, FEMUR=96.3, TIBIA=113.5)
 ]
 
-BASE = (160, 83.7) 
+BASE = (160, 160) 
 OFFSET = Offsetter(BASE)
-try:
-    REAL_SENDER = SerialClient("/dev/ttyACM1")
-    print("PICO found!")
-except Exception as e:
-    print("No PICO found: ", e)
-    REAL_SENDER = None
+
+REAL_SENDER = None
+for device in ["ttyACM0", "ttyACM1"]:
+    try:
+        REAL_SENDER = SerialClient(f"/dev/{device}")
+        print("PICO found!")
+        break
+    except Exception as e:
+        pass
+
+if REAL_SENDER is None:
+    print("No PICO found!")
 # SIMULATOR_SENDER = Client("localhost", 5005)
 
 '''
@@ -45,7 +50,7 @@ End of global variables
 Helper functions
 '''
 def execute_position(position : list[list[float]], debug : bool = True):
-    global LEGS, BASE, OFFSET, SIMULATOR_SENDER, REAL_SENDER
+    global LEGS, BASE, OFFSET, REAL_SENDER
 
     to_send = "set_angles "
     aux = OFFSET.remove_offset(position)
@@ -83,9 +88,10 @@ def main():
     server_process = Process(target=run_server, args=(frame_queue, command_queue))
     server_process.start()
 
-    htop_frame_queue = Queue(maxsize=1)
-    htop_process = Process(target=run_htop, args=(htop_frame_queue,))
-    htop_process.start()
+    # htop_frame_queue = Queue(maxsize=1)
+    # htop_process = Process(target=run_htop, args=(htop_frame_queue,))
+    # htop_process.start()
+    plot_frame = np.zeros((480, 1280, 3), dtype=np.uint8)
 
     animation = None
     while True:
@@ -104,7 +110,6 @@ def main():
 
             iter = 0
 
-        plot_frame = np.zeros((480, 1280, 3), dtype=np.uint8)
         if animation is not None:
             iter += 1
             plot_frame = execute_position(animation[iter], debug=True)

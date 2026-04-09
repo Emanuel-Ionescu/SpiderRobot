@@ -10,9 +10,19 @@ import os
 
 blank = np.zeros((30, 1280, 3), dtype=np.uint8)
 
+def timer(func):
+
+    def wrapper(*args, **kwargs):
+        t1 = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()-t1
+        print(f"{func.__name__} took {end} seconds")
+        return result
+    return wrapper
+
 def get_htop():
     # get each core usage
-    cpu_usage = psutil.cpu_percent(interval=1, percpu=True)
+    cpu_usage = psutil.cpu_percent(interval=0.1, percpu=True)
     
     # get memory usage
     memory_usage = psutil.virtual_memory().percent
@@ -85,9 +95,9 @@ def lean(position : list[list[float]], x: float, y : float, z : float = 0):
 
 def move_leg(position : list[list[float]], leg_no : int, x : float, y : float, z : float):
     position_copy = deepcopy(position)
-    position_copy[leg_no][0] += x
-    position_copy[leg_no][1] += y
-    position_copy[leg_no][2] += z
+    position_copy[leg_no - 1][0] += x
+    position_copy[leg_no - 1][1] += y
+    position_copy[leg_no - 1][2] += z
     return position_copy
 
         

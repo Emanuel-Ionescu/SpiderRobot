@@ -74,7 +74,7 @@ class SpiderLeg:
 
         # Calculate theta1 using arctangent (tan^-1) based on x and y coordinates
         # arctan(y/x) gives the angle of a right-angled triangle with legs x and y
-        if x!=0:
+        if x != 0:
             theta1 = atan(y / x)
         else:
             theta1 = 0

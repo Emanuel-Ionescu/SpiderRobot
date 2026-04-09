@@ -19,7 +19,7 @@ def plot_base(length, width, color="purple"):
     ax.scatter(0, 0, 0, color=color, s=20)
 
     for i in range(20):
-        ax.plot([OFFSET_X-i,  OFFSET_X-i], [-OFFSET_Y,  OFFSET_Y], color=color)
+        ax.plot([-OFFSET_X,  OFFSET_X], [OFFSET_Y-i,  OFFSET_Y-i], color=color)
         
     
     ax.set_xlim(-130 - max(OFFSET_Y, OFFSET_X), 130 + max(OFFSET_Y, OFFSET_X))
