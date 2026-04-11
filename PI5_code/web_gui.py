@@ -124,7 +124,7 @@ def video_feed():
     def stream():
         while True:
             if frame_queue.empty():
-                time.sleep(0.01)
+                time.sleep(0.02)
                 continue
             print("Sending frame to frontend")
             frame = frame_queue.get()
@@ -177,6 +177,10 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
     iterator = 0
 
     while True:
+        if command_queue.empty() and seq_name is None:
+            time.sleep(0.02)
+            continue
+
         if not command_queue.empty():
             seq_name = command_queue.get()
             if seq_name == "pause":
