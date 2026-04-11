@@ -15,7 +15,7 @@ import numpy as np
 from utils import SerialClient, DummySerialClient
 from sequences import SequenceManager
 
-SERVO_DELAY = 0.001
+SERVO_DELAY = 0.1
 
 app = Flask(__name__)
 frame_queue = mp.Queue()
