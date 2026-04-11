@@ -100,17 +100,6 @@ def move_leg(position : list[list[float]], leg_no : int, x : float, y : float, z
     position_copy[leg_no - 1][2] += z
     return position_copy
 
-        
-class Client:
-    def __init__(self, HOST, PORT):
-        self.host = HOST
-        self.port = PORT
-    
-    def __call__(self, data : str):
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((self.host, self.port))
-        client_socket.send(data.encode('utf-8'))
-        client_socket.close()
 
 class SerialClient:
 
@@ -128,3 +117,11 @@ class SerialClient:
             return line
         else:
             return "TIMEOUT"
+
+class DummySerialClient:
+
+    def __init__(self):
+        pass
+    
+    def __call__(self, data : str):
+        return "Dummy response!"

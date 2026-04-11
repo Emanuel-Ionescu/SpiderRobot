@@ -66,7 +66,7 @@ def plot_leg(joint_positions, leg_no=0):
     # Set the title for the plot
     ax.set_title('Spider Leg Visualization')
 
-def spider_show(pause = 100.0, draw = True):
+def spider_show():
     global ax
     
     # takes 2 pictures, one from default view, one from top 
