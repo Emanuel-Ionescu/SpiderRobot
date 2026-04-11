@@ -15,6 +15,8 @@ import numpy as np
 from utils import SerialClient, DummySerialClient
 from sequences import SequenceManager
 
+SERVO_DELAY = 0.001
+
 app = Flask(__name__)
 frame_queue = mp.Queue()
 command_queue = mp.Queue()
@@ -52,14 +54,59 @@ if serial_connection is None:
 def _get_cpu_percent() -> float:
     return psutil.cpu_percent(interval=None)
 
+# ---------------------------------------------------------------------------
+# PMIC helpers — cache the subprocess output for 1 s to avoid spawning a
+# new process on every metric poll.
+# ---------------------------------------------------------------------------
+_pmic_cache: dict = {"ts": 0.0, "data": {}}
+
+def _read_pmic() -> dict[str, float]:
+    """Run vcgencmd pmic_read_adc and return a name→value dict (cached 1 s)."""
+    now = time.time()
+    if now - _pmic_cache["ts"] < 1.0:
+        return _pmic_cache["data"]
+
+    try:
+        raw = subprocess.check_output(
+            ["vcgencmd", "pmic_read_adc"],
+            timeout=2, text=True, stderr=subprocess.DEVNULL
+        )
+        # Each line looks like:  "  EXT5V_V volt(24)=4.95130000V"
+        # or                     "  VDD_CORE_A current(7)=0.43757000A"
+        data: dict[str, float] = {}
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            # name is the first token, value is after '='
+            parts = line.split()
+            if len(parts) >= 2 and "=" in parts[-1]:
+                name = parts[0]
+                val_str = parts[-1].split("=")[-1]  # e.g. "4.95130000V"
+                val_str = val_str.rstrip("VAvc")     # strip unit suffix
+                try:
+                    data[name] = float(val_str)
+                except ValueError:
+                    pass
+        _pmic_cache["data"] = data
+    except Exception:
+        pass  # keep stale cache on error
+
+    _pmic_cache["ts"] = now
+    return _pmic_cache["data"]
+
 def _get_vdd_voltage() -> float:
-    return 5
+    return _read_pmic().get("EXT5V_V", 0.0)
 
 def _get_current() -> float:
-    return 1
+    return _read_pmic().get("VDD_CORE_A", 0.0)
 
 def _get_cpu_temp() -> float:
-    return 40
+    raw = subprocess.check_output(
+        ["vcgencmd", "measure_temp"],
+        timeout=2, text=True, stderr=subprocess.DEVNULL
+    )
+    return float(raw.split("=")[1][:-3])  
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -141,6 +188,7 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
                 print("PI5 ==> PICO:", sequence_manager[seq_name]["commands"][iterator])
                 response = serial_connection(sequence_manager[seq_name]["commands"][iterator])
                 frame_queue.put(sequence_manager[seq_name]["frames"][iterator])
+                time.sleep(SERVO_DELAY)
                 print("PI5 <== PICO:", response)
                 iterator += 1
             else:
