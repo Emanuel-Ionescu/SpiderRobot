@@ -95,13 +95,16 @@ class SequenceManager:
         seq = [
             deepcopy(self.normal_position)
         ]
-        for leg, start_angle, sign in zip([1, 2, 3, 4], [45, -45, -45, 45], [1, 1, -1, -1]):
+        for leg, opposite_leg, start_angle, sign in zip(
+            [1, 2, 3, 4], [4, 3, 2, 1], 
+            [45, -45, -45, 45], [1, 1, -1, -1]):
             # lift one leg
             aux = deepcopy(seq[-1])
             
             new_x = sign * 90*sqrt(2) * cos(radians(target_angle/2 + start_angle))
             new_y = sign * 90*sqrt(2) * sin(radians(target_angle/2 + start_angle))
-            aux[leg-1] = [new_x, new_y, -40]
+            aux[leg-1] = [new_x, new_y, -45]
+            aux[opposite_leg-1] = [0, 0, -35]
             
             seq.append(aux)
 
@@ -111,6 +114,8 @@ class SequenceManager:
             new_x = sign * 90*sqrt(2) * cos(radians(target_angle + start_angle))
             new_y = sign * 90*sqrt(2) * sin(radians(target_angle + start_angle))
             aux[leg-1] = [new_x, new_y, -95]
+            aux[opposite_leg-1] = [0, 0, -95]
+
             
             seq.append(aux)
 
