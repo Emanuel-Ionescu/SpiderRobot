@@ -1,7 +1,7 @@
 from utils import Offsetter, lean, move_leg
 from inverse_kinematics import SpiderLeg
 from inverse_kinematics import plot_base, plot_leg, spider_show
-from math import cos, pi as PI
+from math import cos, sin, pi as PI, sqrt, radians
 from copy import deepcopy
 
 class SequenceManager:
@@ -33,7 +33,9 @@ class SequenceManager:
         self.dict_object = {
             "stand_up"     : { "commands" : [], "frames" : [] },
             "sit_down"     : { "commands" : [], "frames" : [] },
-            "walk_forward" : { "commands" : [], "frames" : [] }
+            "walk_forward" : { "commands" : [], "frames" : [] },
+            "turn_left"    : { "commands" : [], "frames" : [] },
+            "turn_right"   : { "commands" : [], "frames" : [] }
         }   
 
     # computing angles based on a position (from sequences)
@@ -88,6 +90,33 @@ class SequenceManager:
         walk.append(lean(walk[-1], 0, target_Y))
         return walk
 
+    def _create_turning_sequence(self, target_angle):
+        
+        seq = [
+            deepcopy(self.normal_position)
+        ]
+        for leg, start_angle, sign in zip([1, 2, 3, 4], [45, -45, -45, 45], [1, 1, -1, -1]):
+            # lift one leg
+            aux = deepcopy(seq[-1])
+            
+            new_x = sign * 90*sqrt(2) * cos(radians(target_angle/2 + start_angle))
+            new_y = sign * 90*sqrt(2) * sin(radians(target_angle/2 + start_angle))
+            aux[leg-1] = [new_x, new_y, -40]
+            
+            seq.append(aux)
+
+            # put down one leg
+            aux = deepcopy(seq[-1])
+            
+            new_x = sign * 90*sqrt(2) * cos(radians(target_angle + start_angle))
+            new_y = sign * 90*sqrt(2) * sin(radians(target_angle + start_angle))
+            aux[leg-1] = [new_x, new_y, -95]
+            
+            seq.append(aux)
+
+        seq.append(deepcopy(self.normal_position))
+        return seq
+
     # ====================================
     # sequences
     # ====================================
@@ -124,9 +153,12 @@ class SequenceManager:
 
         walk_forward = self._create_walk_forward_sequence(150)
 
+        turn_left = self._create_turning_sequence(45)
+        turn_right = self._create_turning_sequence(-45)
+
         for key, seq in zip(
-            ["stand_up", "sit_down", "walk_forward"],
-            [ stand_up ,  sit_down ,  walk_forward ]
+            ["stand_up", "sit_down", "walk_forward", "turn_left", "turn_right"],
+            [ stand_up ,  sit_down ,  walk_forward,   turn_left,   turn_right ]
         ):
             for pos in seq:
                 command, joints_coords = self._compute_angles(pos)

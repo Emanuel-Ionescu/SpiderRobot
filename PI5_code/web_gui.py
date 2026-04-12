@@ -96,17 +96,26 @@ def _read_pmic() -> dict[str, float]:
     return _pmic_cache["data"]
 
 def _get_vdd_voltage() -> float:
-    return _read_pmic().get("EXT5V_V", 0.0)
+    try:
+        return _read_pmic().get("EXT5V_V", 0.0)
+    except Exception:
+        return 0.0
 
 def _get_current() -> float:
-    return _read_pmic().get("VDD_CORE_A", 0.0)
+    try:
+        return _read_pmic().get("VDD_CORE_A", 0.0)
+    except Exception:
+        return 0.0
 
 def _get_cpu_temp() -> float:
-    raw = subprocess.check_output(
-        ["vcgencmd", "measure_temp"],
-        timeout=2, text=True, stderr=subprocess.DEVNULL
-    )
-    return float(raw.split("=")[1][:-3])  
+    try:
+        raw = subprocess.check_output(
+            ["vcgencmd", "measure_temp"],
+            timeout=2, text=True, stderr=subprocess.DEVNULL
+        )
+        return float(raw.split("=")[1][:-3])
+    except Exception:
+        return 0.0  
 
 # ---------------------------------------------------------------------------
 # Routes
