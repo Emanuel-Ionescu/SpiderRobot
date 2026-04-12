@@ -92,12 +92,25 @@ class SequenceManager:
 
     def _create_turning_sequence(self, target_angle):
         
+        if target_angle < 0: # turning right
+            leg_order = zip(
+                [1,    2,  4,   3], # leg
+                [4,    3,  1,   2], # oposite leg
+                [45, -45, 45, -45], # start angle
+                [1,    1, -1,  -1]  # sign
+            )
+        elif target_angle > 0: # turning left
+            leg_order = zip(
+                [1,    3,  4,   2], # leg
+                [4,    2,  1,   3], # oposite leg 
+                [45, -45, 45, -45], # start angle 
+                [1,   -1, -1,   1]  # sign 
+            )
+
         seq = [
             deepcopy(self.normal_position)
         ]
-        for leg, opposite_leg, start_angle, sign in zip(
-            [1, 2, 3, 4], [4, 3, 2, 1], 
-            [45, -45, -45, 45], [1, 1, -1, -1]):
+        for leg, opposite_leg, start_angle, sign in leg_order:
             # lift one leg
             aux = deepcopy(seq[-1])
             
