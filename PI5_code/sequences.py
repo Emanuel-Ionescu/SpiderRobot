@@ -104,7 +104,7 @@ class SequenceManager:
             new_x = sign * 90*sqrt(2) * cos(radians(target_angle/2 + start_angle))
             new_y = sign * 90*sqrt(2) * sin(radians(target_angle/2 + start_angle))
             aux[leg-1] = [new_x, new_y, -45]
-            aux[opposite_leg-1] = [0, 0, -35]
+            aux[opposite_leg-1][2] = -35
             
             seq.append(aux)
 
@@ -114,7 +114,7 @@ class SequenceManager:
             new_x = sign * 90*sqrt(2) * cos(radians(target_angle + start_angle))
             new_y = sign * 90*sqrt(2) * sin(radians(target_angle + start_angle))
             aux[leg-1] = [new_x, new_y, -95]
-            aux[opposite_leg-1] = [0, 0, -95]
+            aux[opposite_leg-1][2] = -95
 
             
             seq.append(aux)
