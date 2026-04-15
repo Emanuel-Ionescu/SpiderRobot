@@ -18,6 +18,7 @@ from sequences import SequenceManager
 app = Flask(__name__)
 frame_queue = mp.Queue()
 command_queue = mp.Queue()
+FAST_MODE = False
 
 print("Initializing Sequence Manager...")
 sequence_manager = SequenceManager()
@@ -171,8 +172,22 @@ def command(cmd: str):
     if cmd not in valid:
         return jsonify({"status": "error", "message": "unknown command"}), 400
     print(f"[CMD] Received: {cmd}")
+    if FAST_MODE and cmd in ["walk_forward", "turn_left", "turn_right"]:
+        cmd = "fast_" + cmd
     command_queue.put(cmd)
     return jsonify({"status": "ok", "command": cmd})
+
+
+@app.route("/set_fast_mode", methods=["POST"])
+def set_fast_mode():
+    global FAST_MODE
+    from flask import request
+    data = request.get_json()
+    if data and "fast_mode" in data:
+        FAST_MODE = bool(data["fast_mode"])
+        print(f"[CMD] Fast mode set to: {'ON' if FAST_MODE else 'OFF'}")
+        return jsonify({"status": "ok", "fast_mode": FAST_MODE})
+    return jsonify({"status": "error"}), 400
 
 
 # ---------------------------------------------------------------------------
@@ -195,6 +210,7 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
                 iterator = 0
 
         if seq_name is not None:
+            print("Running:", seq_name)
             if iterator < len(sequence_manager[seq_name]["commands"]):
                 print("PI5 ==> PICO:", sequence_manager[seq_name]["commands"][iterator])
                 response = serial_connection(sequence_manager[seq_name]["commands"][iterator])

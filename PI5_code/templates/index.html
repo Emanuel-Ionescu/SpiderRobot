@@ -555,6 +555,12 @@
     </div>
     <div class="dpad-label">↑ FWD &nbsp;|&nbsp; ↓ BWD &nbsp;|&nbsp; ◀▶ TURN</div>
 
+    <div style="margin-top: 16px; padding: 0 16px;">
+      <button class="btn-action" id="btn-fast-mode" onclick="toggleFastMode()" style="width: 100%; justify-content: center;">
+        FAST MODE: OFF
+      </button>
+    </div>
+
     <div class="log-panel">
       <div class="section-title" style="margin-bottom:8px;">Command Log</div>
       <div class="log-box" id="log-box"></div>
@@ -771,6 +777,32 @@ async function sendCmd(cmd) {
   } catch(e) {
     toast(`ERR: ${e.message}`, 'var(--danger)');
     console.warn('Command error', e);
+  }
+}
+
+let isFastMode = false;
+async function toggleFastMode() {
+  isFastMode = !isFastMode;
+  const btn = $('btn-fast-mode');
+  btn.textContent = `FAST MODE: ${isFastMode ? 'ON' : 'OFF'}`;
+  
+  if (isFastMode) {
+    btn.classList.add('success');
+  } else {
+    btn.classList.remove('success');
+  }
+  
+  try {
+    const res = await fetch(`/set_fast_mode`, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fast_mode: isFastMode })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    logCmd(`→ FAST MODE ${isFastMode ? 'ON' : 'OFF'}`);
+  } catch(e) {
+    toast(`ERR: ${e.message}`, 'var(--danger)');
+    console.warn('Fast mode error', e);
   }
 }
 

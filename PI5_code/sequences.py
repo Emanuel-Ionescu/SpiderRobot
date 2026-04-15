@@ -35,7 +35,10 @@ class SequenceManager:
             "sit_down"     : { "commands" : [], "frames" : [], "delay" : 0.01 },
             "walk_forward" : { "commands" : [], "frames" : [], "delay" : 0.1  },
             "turn_left"    : { "commands" : [], "frames" : [], "delay" : 0.25 },
-            "turn_right"   : { "commands" : [], "frames" : [], "delay" : 0.25 }
+            "turn_right"   : { "commands" : [], "frames" : [], "delay" : 0.25 },
+            "fast_walk_forward" : { "commands" : [], "frames" : [], "delay" : 0.1  },
+            "fast_turn_left"    : { "commands" : [], "frames" : [], "delay" : 0.25 },
+            "fast_turn_right"   : { "commands" : [], "frames" : [], "delay" : 0.25 }
         }   
 
     # computing angles based on a position (from sequences)
@@ -169,14 +172,18 @@ class SequenceManager:
             lean(self.normal_position, 0, 0, -95)
         ]
 
-        walk_forward = self._create_walk_forward_sequence(150)
+        walk_forward = self._create_walk_forward_sequence(75)
+        fast_walk_forward = self._create_walk_forward_sequence(150)
 
-        turn_left = self._create_turning_sequence(45)
-        turn_right = self._create_turning_sequence(-45)
+        turn_left = self._create_turning_sequence(30)
+        turn_right = self._create_turning_sequence(-30)
+
+        fast_turn_left  = self._create_turning_sequence(50)
+        fast_turn_right = self._create_turning_sequence(-50)
 
         for key, seq in zip(
-            ["stand_up", "sit_down", "walk_forward", "turn_left", "turn_right"],
-            [ stand_up ,  sit_down ,  walk_forward,   turn_left,   turn_right ]
+            ["stand_up", "sit_down", "walk_forward", "turn_left", "turn_right", "fast_walk_forward", "fast_turn_left", "fast_turn_right"],
+            [ stand_up ,  sit_down ,  walk_forward,   turn_left,   turn_right,   fast_walk_forward,   fast_turn_left,   fast_turn_right ]
         ):
             for pos in seq:
                 command, joints_coords = self._compute_angles(pos)
