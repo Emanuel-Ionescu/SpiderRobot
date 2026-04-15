@@ -31,11 +31,11 @@ class SequenceManager:
         self.current_pos = deepcopy(self.normal_position)
 
         self.dict_object = {
-            "stand_up"     : { "commands" : [], "frames" : [] },
-            "sit_down"     : { "commands" : [], "frames" : [] },
-            "walk_forward" : { "commands" : [], "frames" : [] },
-            "turn_left"    : { "commands" : [], "frames" : [] },
-            "turn_right"   : { "commands" : [], "frames" : [] }
+            "stand_up"     : { "commands" : [], "frames" : [], "delay" : 0.01 },
+            "sit_down"     : { "commands" : [], "frames" : [], "delay" : 0.01 },
+            "walk_forward" : { "commands" : [], "frames" : [], "delay" : 0.1  },
+            "turn_left"    : { "commands" : [], "frames" : [], "delay" : 0.25 },
+            "turn_right"   : { "commands" : [], "frames" : [], "delay" : 0.25 }
         }   
 
     # computing angles based on a position (from sequences)

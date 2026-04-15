@@ -15,8 +15,6 @@ import numpy as np
 from utils import SerialClient, DummySerialClient
 from sequences import SequenceManager
 
-SERVO_DELAY = 0.1
-
 app = Flask(__name__)
 frame_queue = mp.Queue()
 command_queue = mp.Queue()
@@ -201,7 +199,7 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
                 print("PI5 ==> PICO:", sequence_manager[seq_name]["commands"][iterator])
                 response = serial_connection(sequence_manager[seq_name]["commands"][iterator])
                 frame_queue.put(sequence_manager[seq_name]["frames"][iterator])
-                time.sleep(SERVO_DELAY)
+                time.sleep(sequence_manager[seq_name]["delay"])
                 print("PI5 <== PICO:", response)
                 iterator += 1
             else:
@@ -210,6 +208,9 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
     
 
 if __name__ == "__main__":
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
 
     seq_loop_proc = mp.Process(
         target=run_sequence_loop,
