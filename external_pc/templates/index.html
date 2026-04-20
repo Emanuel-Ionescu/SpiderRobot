@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spider Robot — Control Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    /* ================================================================
+       Design Tokens
+    ================================================================ */
+    :root {
+      --bg: #0a0d14;
+      --surface: #111622;
+      --surface2: #161d2e;
+      --border: rgba(99, 179, 237, 0.12);
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --danger: #f87171;
+      --warn: #fb923c;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --glow: 0 0 20px rgba(56, 189, 248, 0.25);
+      --glow2: 0 0 20px rgba(129, 140, 248, 0.25);
+      --radius: 12px;
+      --radius-lg: 18px;
+      --transition: 0.2s ease;
+    }
+
+    /* ================================================================
+       Reset & Base
+    ================================================================ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    /* ================================================================
+       Layout — 3-column grid
+    ================================================================ */
+    .shell {
+      display: grid;
+      grid-template-columns: 260px 1fr 260px;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+      gap: 0;
+    }
+
+    /* ================================================================
+       Top Bar
+    ================================================================ */
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    .topbar .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .topbar .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent3);
+      box-shadow: 0 0 8px var(--accent3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .topbar .spacer {
+      flex: 1;
+    }
+
+    .chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .chip.warn {
+      background: rgba(251, 146, 60, 0.1);
+      color: var(--warn);
+      border-color: rgba(251, 146, 60, 0.2);
+    }
+
+    /* ================================================================
+       Left Panel — Controller
+    ================================================================ */
+    .panel-left {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .btn-action {
+      padding: 11px 18px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      background: rgba(56, 189, 248, 0.06);
+      color: var(--accent);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-action.danger {
+      border-color: rgba(248, 113, 113, 0.3);
+      background: rgba(248, 113, 113, 0.07);
+      color: var(--danger);
+    }
+
+    .btn-action.danger:hover {
+      background: rgba(248, 113, 113, 0.18);
+      border-color: var(--danger);
+      box-shadow: 0 0 20px rgba(248, 113, 113, 0.25);
+    }
+
+    .btn-action.success {
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.07);
+      color: var(--accent3);
+    }
+
+    .btn-action.success:hover {
+      background: rgba(52, 211, 153, 0.18);
+      border-color: var(--accent3);
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.25);
+    }
+
+    .btn-icon {
+      font-size: 18px;
+    }
+
+    /* D-Pad / Directional Controller */
+    .dpad-section {
+      margin-bottom: 16px;
+    }
+
+    .dpad-ring {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto;
+    }
+
+    .dpad-center {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.04), transparent 70%);
+    }
+
+    .dpad-btn {
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      background: var(--surface2);
+      color: var(--accent);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      user-select: none;
+    }
+
+    .dpad-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+      transform: scale(1.1);
+    }
+
+    .dpad-btn:active {
+      transform: scale(0.95);
+      background: rgba(56, 189, 248, 0.25);
+    }
+
+    .dpad-btn.up {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .dpad-btn.down {
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .dpad-btn.left {
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .dpad-btn.right {
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .dpad-btn.up:hover {
+      transform: translateX(-50%) scale(1.1);
+    }
+
+    .dpad-btn.down:hover {
+      transform: translateX(-50%) scale(1.1);
+    }
+
+    .dpad-btn.left:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .dpad-btn.right:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .dpad-btn.up:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+
+    .dpad-btn.down:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+
+    .dpad-btn.left:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .dpad-btn.right:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .dpad-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Log area */
+    .log-panel {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .log-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      height: 90px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--accent3);
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    .log-entry {
+      line-height: 1.6;
+    }
+
+    .log-entry .ts {
+      color: var(--muted);
+      margin-right: 6px;
+    }
+
+    /* ================================================================
+       Center Panel — Video + (bottom: charts)
+    ================================================================ */
+    .panel-center {
+      display: grid;
+      grid-template-rows: 1fr 260px;
+      overflow: hidden;
+    }
+
+    /* Video */
+    .video-wrapper {
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .video-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #0d1220 0%, #111827 100%);
+    }
+
+    .video-placeholder .icon {
+      font-size: 64px;
+      opacity: 0.3;
+    }
+
+    .video-placeholder .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .video-overlay {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .vid-badge {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(8px);
+    }
+
+    .vid-badge.live {
+      background: rgba(248, 113, 113, 0.85);
+      color: #fff;
+    }
+
+    .vid-badge.res {
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--text);
+    }
+
+    .rec-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      margin-right: 5px;
+      animation: pulse 1s infinite;
+    }
+
+    /* Chart grid in center bottom */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+
+    .chart-card {
+      background: var(--surface);
+      padding: 14px 18px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .chart-card:nth-child(1)::before {
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .chart-card:nth-child(2)::before {
+      background: linear-gradient(90deg, var(--accent2), transparent);
+    }
+
+    .chart-card:nth-child(3)::before {
+      background: linear-gradient(90deg, var(--accent3), transparent);
+    }
+
+    .chart-card:nth-child(4)::before {
+      background: linear-gradient(90deg, var(--warn), transparent);
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chart-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .chart-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .chart-card:nth-child(1) .chart-value {
+      color: var(--accent);
+    }
+
+    .chart-card:nth-child(2) .chart-value {
+      color: var(--accent2);
+    }
+
+    .chart-card:nth-child(3) .chart-value {
+      color: var(--accent3);
+    }
+
+    .chart-card:nth-child(4) .chart-value {
+      color: var(--warn);
+    }
+
+    .chart-canvas-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    canvas {
+      width: 100% !important;
+    }
+
+    /* ================================================================
+       Right Panel — Metrics & Info
+    ================================================================ */
+    .panel-right {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .metric-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .metric-unit {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--bg);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+
+    .c1 .metric-val,
+    .c1 .progress-fill {
+      color: var(--accent);
+      background: var(--accent);
+    }
+
+    .c2 .metric-val,
+    .c2 .progress-fill {
+      color: var(--accent2);
+      background: var(--accent2);
+    }
+
+    .c3 .metric-val,
+    .c3 .progress-fill {
+      color: var(--accent3);
+      background: var(--accent3);
+    }
+
+    .c4 .metric-val,
+    .c4 .progress-fill {
+      color: var(--warn);
+      background: var(--warn);
+    }
+
+    /* Robot info card */
+    .info-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-key {
+      color: var(--muted);
+    }
+
+    .info-val {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .info-val.green {
+      color: var(--accent3);
+    }
+
+    .info-val.yellow {
+      color: var(--warn);
+    }
+
+    /* ================================================================
+       Toast notification
+    ================================================================ */
+    .toast-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transform: translateY(10px);
+      animation: toastIn 0.3s ease forwards, toastOut 0.3s ease 1.8s forwards;
+    }
+
+    @keyframes toastIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toastOut {
+      to {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+    }
+
+    /* ================================================================
+       Scrollbar styling
+    ================================================================ */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* ================================================================
+       Responsive safety
+    ================================================================ */
+    @media (max-width: 1100px) {
+      .shell {
+        grid-template-columns: 220px 1fr 220px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="shell">
+
+    <!-- ================================================================
+       TOP BAR
+  ================================================================ -->
+    <header class="topbar">
+      <div class="status-dot"></div>
+      <div>
+        <div class="logo">SPIDER&nbsp;ROBOT</div>
+        <div class="subtitle">Control Dashboard v1.0</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="chip" id="chip-status">● CONNECTED</div>
+      <div class="chip warn" id="chip-mode">MANUAL</div>
+      <div class="chip" id="chip-fps">-- fps</div>
+    </header>
+
+    <!-- ================================================================
+       LEFT PANEL — CONTROLLER
+  ================================================================ -->
+    <aside class="panel-left">
+
+      <div class="section-title">Quick Actions</div>
+      <div class="action-row">
+        <button class="btn-action danger" id="btn-pause" onclick="sendCmd('pause')">
+          <span class="btn-icon">&#9646;&#9646;</span> Pause
+        </button>
+        <button class="btn-action" id="btn-sit" onclick="sendCmd('sit_down')">
+          <span class="btn-icon">&#8609;</span> Sit Down
+        </button>
+        <button class="btn-action success" id="btn-stand" onclick="sendCmd('stand_up')">
+          <span class="btn-icon">&#8607;</span> Stand Up
+        </button>
+      </div>
+
+      <div class="section-title dpad-section">Directional Control</div>
+      <div class="dpad-ring">
+        <div class="dpad-center"></div>
+        <div class="dpad-btn up" onclick="sendCmd('walk_forward')" title="Walk Forward">&#9650;</div>
+        <div class="dpad-btn down" onclick="sendCmd('walk_backward')" title="Walk Backward">&#9660;</div>
+        <div class="dpad-btn left" onclick="sendCmd('turn_left')" title="Turn Left">&#9664;</div>
+        <div class="dpad-btn right" onclick="sendCmd('turn_right')" title="Turn Right">&#9654;</div>
+      </div>
+      <div class="dpad-label">↑ FWD &nbsp;|&nbsp; ↓ BWD &nbsp;|&nbsp; ◀▶ TURN</div>
+
+      <div style="margin-top: 16px; padding: 0 16px;">
+        <button class="btn-action" id="btn-fast-mode" onclick="toggleFastMode()"
+          style="width: 100%; justify-content: center;">
+          FAST MODE: OFF
+        </button>
+      </div>
+
+      <div class="log-panel">
+        <div class="section-title" style="margin-bottom:8px;">Command Log</div>
+        <div class="log-box" id="log-box"></div>
+      </div>
+
+    </aside>
+
+    <!-- ================================================================
+       CENTER PANEL — VIDEO + CHARTS
+  ================================================================ -->
+    <main class="panel-center">
+
+      <!-- Video viewer -->
+      <div class="video-wrapper" id="video-wrapper">
+        <img id="video-stream" src="/video_feed" onerror="showPlaceholder()" alt="Live robot feed"
+          style="display:none" />
+        <div class="video-placeholder" id="video-placeholder">
+          <div class="icon">[ CAM ]</div>
+          <div class="label">Connecting to camera feed…</div>
+        </div>
+        <div class="video-overlay">
+          <span class="vid-badge live"><span class="rec-dot"></span>LIVE</span>
+          <span class="vid-badge res" id="badge-res">640 × 480</span>
+        </div>
+      </div>
+
+      <!-- Charts (2×2 grid) -->
+      <div class="chart-grid">
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">CPU Usage</span>
+            <span class="chart-value" id="val-cpu">0<span class="metric-unit">%</span></span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-cpu"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">VDD Voltage</span>
+            <span class="chart-value" id="val-vdd">0<span class="metric-unit">V</span></span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-vdd"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Current</span>
+            <span class="chart-value" id="val-current">0<span class="metric-unit">A</span></span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-current"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">CPU Temp</span>
+            <span class="chart-value" id="val-temp">0<span class="metric-unit">°C</span></span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-temp"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ================================================================
+       RIGHT PANEL — METRICS CARDS
+  ================================================================ -->
+    <aside class="panel-right">
+
+      <div class="section-title">System Metrics</div>
+
+      <div class="metric-card c1">
+        <div class="metric-row">
+          <span class="metric-label">CPU</span>
+          <span class="metric-val" id="mc-cpu">0<span class="metric-unit">%</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bar-cpu" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card c2">
+        <div class="metric-row">
+          <span class="metric-label">VDD</span>
+          <span class="metric-val" id="mc-vdd">0<span class="metric-unit">V</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bar-vdd" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card c3">
+        <div class="metric-row">
+          <span class="metric-label">Current</span>
+          <span class="metric-val" id="mc-current">0<span class="metric-unit">A</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bar-current" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card c4">
+        <div class="metric-row">
+          <span class="metric-label">Temp</span>
+          <span class="metric-val" id="mc-temp">0<span class="metric-unit">°C</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bar-temp" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Robot Info</div>
+
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-key">Model</span>
+          <span class="info-val">SpiderRobot v2</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Network</span>
+          <span class="info-val green" id="info-net">LAN</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">State</span>
+          <span class="info-val yellow" id="info-state">Idle</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Uptime</span>
+          <span class="info-val" id="info-uptime">00:00:00</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Latency</span>
+          <span class="info-val" id="info-latency">-- ms</span>
+        </div>
+      </div>
+
+    </aside>
+
+  </div><!-- .shell -->
+
+  <!-- Toast container -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+  <script>
+    "use strict";
+
+    /* ---- Utilities ---- */
+    const $ = id => document.getElementById(id);
+
+    function now() {
+      const d = new Date();
+      return d.toTimeString().slice(0, 8);
+    }
+
+    function toast(msg, color = 'var(--accent)') {
+      const w = $('toast-wrap');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      t.style.borderColor = color;
+      t.style.color = color;
+      w.appendChild(t);
+      setTimeout(() => t.remove(), 2200);
+    }
+
+    function logCmd(cmd) {
+      const box = $('log-box');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<span class="ts">${now()}</span>${cmd}`;
+      box.prepend(entry);
+      // Trim log
+      while (box.children.length > 50) box.removeChild(box.lastChild);
+    }
+
+    /* ---- Video stream ---- */
+    const videoImg = $('video-stream');
+    const placeholder = $('video-placeholder');
+    let fpsCounter = 0, lastFpsTs = performance.now();
+
+    videoImg.onload = () => {
+      placeholder.style.display = 'none';
+      videoImg.style.display = 'block';
+      fpsCounter++;
+      const now2 = performance.now();
+      if (now2 - lastFpsTs >= 1000) {
+        $('chip-fps').textContent = `${fpsCounter} fps`;
+        fpsCounter = 0;
+        lastFpsTs = now2;
+      }
+    };
+
+    function showPlaceholder() {
+      placeholder.style.display = 'flex';
+      videoImg.style.display = 'none';
+      $('chip-fps').textContent = '-- fps';
+    }
+
+    /* ---- Command sender ---- */
+    async function sendCmd(cmd) {
+      logCmd(`→ ${cmd.replace(/_/g, ' ').toUpperCase()}`);
+      $('info-state').textContent = cmd.replace(/_/g, ' ');
+      try {
+        const res = await fetch(`/command/${cmd}`, { method: 'POST' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        toast(`OK: ${cmd.replace(/_/g, ' ')}`, 'var(--accent3)');
+      } catch (e) {
+        toast(`ERR: ${e.message}`, 'var(--danger)');
+        console.warn('Command error', e);
+      }
+    }
+
+    let isFastMode = false;
+    async function toggleFastMode() {
+      isFastMode = !isFastMode;
+      const btn = $('btn-fast-mode');
+      btn.textContent = `FAST MODE: ${isFastMode ? 'ON' : 'OFF'}`;
+
+      if (isFastMode) {
+        btn.classList.add('success');
+      } else {
+        btn.classList.remove('success');
+      }
+
+      try {
+        const res = await fetch(`/set_fast_mode`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fast_mode: isFastMode })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        logCmd(`→ FAST MODE ${isFastMode ? 'ON' : 'OFF'}`);
+      } catch (e) {
+        toast(`ERR: ${e.message}`, 'var(--danger)');
+        console.warn('Fast mode error', e);
+      }
+    }
+
+    /* ---- Chart setup ---- */
+    const MAX_POINTS = 60;
+    const labels = Array(MAX_POINTS).fill('');
+
+    function makeDataset(color, fillColor) {
+      return {
+        data: Array(MAX_POINTS).fill(null),
+        borderColor: color,
+        backgroundColor: fillColor,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.4,
+        fill: true,
+      };
+    }
+
+    function makeChart(id, color, fillColor, maxY = 100) {
+      const ctx = $(id).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [...labels],
+          datasets: [makeDataset(color, fillColor)],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: false },
+            y: {
+              display: true,
+              min: 0, max: maxY,
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#64748b',
+                font: { size: 9 },
+                maxTicksLimit: 4,
+                callback: v => v + (maxY === 100 ? '%' : maxY === 10 ? '' : '°'),
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // VDD max ~6V → scale to 10; Current max ~5A → scale to 10
+    const charts = {
+      cpu: makeChart('chart-cpu', '#38bdf8', 'rgba(56,189,248,0.10)', 100),
+      vdd: makeChart('chart-vdd', '#818cf8', 'rgba(129,140,248,0.10)', 10),
+      current: makeChart('chart-current', '#34d399', 'rgba(52,211,153,0.10)', 10),
+      temp: makeChart('chart-temp', '#fb923c', 'rgba(251,146,60,0.10)', 100),
+    };
+
+    function pushPoint(chart, value) {
+      const ds = chart.data.datasets[0].data;
+      ds.push(value);
+      if (ds.length > MAX_POINTS) ds.shift();
+      chart.update('none');
+    }
+
+    /* ---- Metrics polling ---- */
+    async function fetchMetrics() {
+      try {
+        const t0 = performance.now();
+        const res = await fetch('/metrics');
+        const lat = Math.round(performance.now() - t0);
+        $('info-latency').textContent = `${lat} ms`;
+
+        if (!res.ok) return;
+        const d = await res.json();
+
+        // Charts
+        pushPoint(charts.cpu, d.cpu);
+        pushPoint(charts.vdd, d.vdd);
+        pushPoint(charts.current, d.current);
+        pushPoint(charts.temp, Math.min(d.temp, 100));
+
+        // Chart value labels
+        $('val-cpu').innerHTML = `${d.cpu}<span class="metric-unit">%</span>`;
+        $('val-vdd').innerHTML = `${d.vdd}<span class="metric-unit">V</span>`;
+        $('val-current').innerHTML = `${d.current}<span class="metric-unit">A</span>`;
+        $('val-temp').innerHTML = `${d.temp}<span class="metric-unit">°C</span>`;
+
+        // Sidebar metric cards
+        $('mc-cpu').innerHTML = `${d.cpu}<span class="metric-unit">%</span>`;
+        $('mc-vdd').innerHTML = `${d.vdd}<span class="metric-unit">V</span>`;
+        $('mc-current').innerHTML = `${d.current}<span class="metric-unit">A</span>`;
+        $('mc-temp').innerHTML = `${d.temp}<span class="metric-unit">°C</span>`;
+
+        // Progress bars (vdd: 0-10V scale, current: 0-10A scale)
+        $('bar-cpu').style.width = d.cpu + '%';
+        $('bar-vdd').style.width = Math.min(d.vdd / 10 * 100, 100) + '%';
+        $('bar-current').style.width = Math.min(d.current / 10 * 100, 100) + '%';
+        $('bar-temp').style.width = Math.min(d.temp, 100) + '%';
+
+      } catch (e) {
+        console.warn('Metrics fetch error', e);
+      }
+    }
+
+    setInterval(fetchMetrics, 1000);
+    fetchMetrics(); // immediate first call
+
+    /* ---- Uptime counter ---- */
+    const startTs = Date.now();
+    function updateUptime() {
+      const s = Math.floor((Date.now() - startTs) / 1000);
+      const h = String(Math.floor(s / 3600)).padStart(2, '0');
+      const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+      const sec = String(s % 60).padStart(2, '0');
+      $('info-uptime').textContent = `${h}:${m}:${sec}`;
+    }
+    setInterval(updateUptime, 1000);
+
+    /* ---- Keyboard shortcuts ---- */
+    const keyMap = {
+      'ArrowUp': 'walk_forward',
+      'ArrowDown': 'walk_backward',
+      'ArrowLeft': 'turn_left',
+      'ArrowRight': 'turn_right',
+      ' ': 'pause',
+      'KeyS': 'sit_down',
+      'KeyW': 'stand_up',
+    };
+    document.addEventListener('keydown', e => {
+      const cmd = keyMap[e.code] || keyMap[e.key];
+      if (cmd) { e.preventDefault(); sendCmd(cmd); }
+    });
+
+    /* ---- Init log ---- */
+    logCmd('Dashboard initialised');
+  </script>
+</body>
+
+</html>

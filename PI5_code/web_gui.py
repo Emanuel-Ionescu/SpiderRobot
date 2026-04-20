@@ -13,22 +13,16 @@ import psutil
 import cv2
 import numpy as np
 from utils import SerialClient, DummySerialClient
-from sequences import SequenceManager
+import json
 
 app = Flask(__name__)
 frame_queue = mp.Queue()
 command_queue = mp.Queue()
 FAST_MODE = False
 
-print("Initializing Sequence Manager...")
-sequence_manager = SequenceManager()
-
-# precomputing the sequences
-start = time.time()
-print("Computing sequences...")
-sequence_manager.generate()
-end = time.time()
-print(f"Sequences computed in {end - start} seconds")
+# getting sequences from json file
+with open("sequences.json", "r") as f:
+    sequences_json = json.load(f)
 
 # setting up serial connection
 serial_connection = None
@@ -194,7 +188,7 @@ def set_fast_mode():
 # Entry point
 # ---------------------------------------------------------------------------
 
-def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
+def run_sequence_loop(command_queue : mp.Queue):
     seq_name = None
     iterator = 0
 
@@ -211,11 +205,10 @@ def run_sequence_loop(command_queue : mp.Queue, frame_queue : mp.Queue):
 
         if seq_name is not None:
             print("Running:", seq_name)
-            if iterator < len(sequence_manager[seq_name]["commands"]):
-                print("PI5 ==> PICO:", sequence_manager[seq_name]["commands"][iterator])
-                response = serial_connection(sequence_manager[seq_name]["commands"][iterator])
-                frame_queue.put(sequence_manager[seq_name]["frames"][iterator])
-                time.sleep(sequence_manager[seq_name]["delay"])
+            if iterator < len(sequences_json[seq_name]["commands"]):
+                print("PI5 ==> PICO:", sequences_json[seq_name]["commands"][iterator])
+                response = serial_connection(sequences_json[seq_name]["commands"][iterator])
+                time.sleep(sequences_json[seq_name]["delay"])
                 print("PI5 <== PICO:", response)
                 iterator += 1
             else:
@@ -230,7 +223,7 @@ if __name__ == "__main__":
 
     seq_loop_proc = mp.Process(
         target=run_sequence_loop,
-        args=(command_queue, frame_queue)
+        args=(command_queue,)
     )
     seq_loop_proc.start()
 
